@@ -1,6 +1,5 @@
 # MNIST-MLP
 
-# MNIST-MLP
 An implementation of a Multilayered Perceptron to classify the MNIST DataSet
 This is an expansion of our most basic model: The Perceptron
 
