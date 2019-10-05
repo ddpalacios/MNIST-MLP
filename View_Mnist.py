@@ -1,9 +1,32 @@
 import numpy as np
+from fileLoader import load_file
+import matplotlib.pyplot as plt
 
-mnist =  np.load('mnist_data.npz')
+df = load_file('mnist_data.npz')
+X_train, y_train, X_test, y_test = df.get_data()
 
-X_train, y_train, X_test, y_test = [mnist[f] for f in mnist.files]
+
+fig, ax = plt.subplots(nrows=2, ncols=5, sharex=True, sharey=True)
+
+ax = ax.flatten()
+for i in range(10):
+    img = X_train[y_train==i][0].reshape(28,28)
+    ax[i].imshow(img, cmap='Greys')
+
+ax[0].set_xticks([])
+ax[0].set_yticks([])
+plt.tight_layout()
+plt.show()
 
 
-print(X_train.shape, y_train.shape)
-print(X_test.shape, y_test.shape)
+fig, ax = plt.subplots(nrows=5, ncols=5, sharex=True, sharey=True)
+ax = ax.flatten()
+for i in range(25):
+    img = X_train[y_train == 7][i].reshape(28, 28)
+    ax[i].imshow(img, cmap='Greys')
+
+
+ax[0].set_xticks([])
+ax[0].set_yticks([])
+plt.tight_layout()
+plt.show()
