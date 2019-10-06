@@ -22,6 +22,11 @@ class MultiLayerPerceptron(object):
         self.bias_hidden = np.zeros(self.hidden)
         self.weights_hidden = np.random.rand(n_feautues, self.hidden)
 
+        #hidden -- > output
+        self.bias_output = np.zeros(n_output)
+        self.weigths_output = np.random.random(self.hidden, n_output)
+
+
 
 
     def sigmoid(self, z):
