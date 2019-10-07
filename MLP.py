@@ -1,4 +1,5 @@
 import numpy as np
+from time import sleep
 
 
 class MultiLayerPerceptron(object):
@@ -28,6 +29,8 @@ class MultiLayerPerceptron(object):
 
         # Lets print out what our model may look like
         self.print_model_architecture()
+        print("Will start activating weights and bias...\n\n")
+        sleep(2)
 
         y_train_enc = self.onehot(y, n_output)  # Q.  Why is this method important? How does this affect our data?
 
@@ -58,7 +61,7 @@ class MultiLayerPerceptron(object):
         net2 = np.dot(out1, self.weigths_output) + self.bias_output
         out2 = self.sigmoid(net2)
 
-        self.print_Live_Forward_activations(out1, out2)
+        self.print_live_forward_activations(out1, out2)
 
         return net1, out1, net2, out2
 
@@ -87,5 +90,5 @@ class MultiLayerPerceptron(object):
                 self.weigths_output.shape,
                 self.bias_output.shape))
 
-    def print_Live_Forward_activations(self, out1, out2):
-        print("Activation from Input -> Hidden {}\n\nActivation from Hidden -> Output {}\n\n".format(out1, out2))
+    def print_live_forward_activations(self, out1, out2):
+        print("Activation from Input -> Hidden\n{}\n\nActivation from Hidden -> Output\n{}\n\n".format(out1, out2))
