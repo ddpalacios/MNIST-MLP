@@ -2,12 +2,8 @@ import numpy as np
 
 
 class MultiLayerPerceptron(object):
-    def __init__(self, hidden=30, L2=0, epochs=20, lr=.01, shuffle=True, mini_batch_size=1, seed=None):
-        self.eval = {'cost': [],
-                     'train_acc': [],
-                     'valid_acc': []
-                     }
-        self.hidden = hidden
+    def __init__(self, hidden_units=100, L2=0, epochs=20, lr=.01, shuffle=True, mini_batch_size=1, seed=None):
+        self.hidden_units = hidden_units
         self.L2 = L2
         self.epohcs = epochs
         self.lr = lr
@@ -19,18 +15,24 @@ class MultiLayerPerceptron(object):
         n_output = np.unique(y).shape[0]  # 10 ouputs
         n_features = X.shape[1]  # 784 Features
 
-        # Now we need to initalize weights for hidden and output layers
+        # Now we need to initialize weights for hidden and output layers
 
         # input -- > hidden
-        self.bias_hidden = np.zeros(self.hidden)
-        self.weights_hidden = np.random.rand(n_features, self.hidden)
+        self.weights_hidden = np.random.rand(n_features, self.hidden_units)  # (784 , 100)
+        self.bias_hidden = np.zeros(self.hidden_units)  # (100, )
 
         # hidden -- > output
-        self.bias_output = np.zeros(n_output)
-        self.weigths_output = np.random.rand(self.hidden, n_output)
+        self.weigths_output = np.random.rand(self.hidden_units, n_output)  # (100, 784)
+        self.bias_output = np.zeros(n_output)  # (10, )
 
-        y_train_enc = self._onehot(y, n_output)
+        self.print_model_architecture()
 
+        # y_train_enc = self.onehot(y, n_output)
+
+        self.eval = {'cost': [],
+                     'train_acc': [],
+                     'valid_acc': []
+                     }
 
     def sigmoid(self, z):
         return 1 / (1 + np.exp(-z))
@@ -38,8 +40,7 @@ class MultiLayerPerceptron(object):
     def forward(self):
         pass
 
-    def _onehot(self, y, n_classes):
-
+    def onehot(self, y, n_classes):
         one_hot = np.zeros((n_classes, y.shape[0]))
         for idx, val in enumerate(y.astype(int)):
             one_hot[val, idx] = 1
@@ -50,3 +51,10 @@ class MultiLayerPerceptron(object):
 
     def predict(self):
         pass
+
+    def print_model_architecture(self):
+        print(
+            "Model Architecture:\n\nHidden weights: {}\nHidden Bias: {}\nOutput weights: {}\nOutput Bias: {}".format(self.weights_hidden.shape,
+                                                                                              self.bias_hidden.shape,
+                                                                                              self.weigths_output.shape,
+                                                                                              self.bias_output.shape))
