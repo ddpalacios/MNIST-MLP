@@ -1,9 +1,15 @@
+import sys
+
 import numpy as np
 from time import sleep
 
 
 class MultiLayerPerceptron(object):
-    def __init__(self, hidden_units=100, L2=0, epochs=20, lr=.01, shuffle=True, mini_batch_size=1, seed=None):
+    def __init__(self, hidden_units=100, L2=0., epochs=20, lr=.01, shuffle=True, mini_batch_size=1, seed=None):
+        self.eval = {'cost': [],
+                     'train_acc': [],
+                     'valid_acc': []
+                     }
         self.random = np.random.RandomState(seed)
         self.hidden_units = hidden_units
         self.L2 = L2
@@ -32,13 +38,8 @@ class MultiLayerPerceptron(object):
         self.print_model_architecture()
         print("Will start activating weights and bias...\n\n")
         sleep(2)
-
+        epoch_strlen = len(str(self.epochs))  # for progr format
         y_train_enc = self.onehot(y, n_output)  # Q.  Why is this method important? How does this affect our data?
-
-        self.eval = {'cost': [],
-                     'train_acc': [],
-                     'valid_acc': []
-                     }
 
         for _ in range(self.epochs):
             indices = np.arange(X.shape[0])
@@ -70,10 +71,30 @@ class MultiLayerPerceptron(object):
                 self.weights_hidden -= self.lr * delta_w_h
                 self.bias_hidden -= self.lr * delta_b_h
 
-                delta_w_out = (grad_w_h + self.L2 * self.weigths_output)
+                delta_w_out = (grad_w_out + self.L2 * self.weigths_output)
                 delta_b_out = grad_b_out
                 self.weigths_output -= self.lr * delta_w_out
                 self.bias_output -= self.lr * delta_b_out
+
+            ###########
+            # Evaluation
+            ###########
+            net1, out1, net2, out2 = self.forward(X)
+            cost = self.compute_cost(y_enc=y_train_enc, output=out2)
+
+            y_train_pred = self.predict(X)
+            train_acc = ((np.sum(y == y_train_pred)).astype(np.float) /
+                         X.shape[0])
+
+            sys.stderr.write('\r%0*d/%d| Cost: %.2f '
+                             '| Train.: %.2f%%' % (epoch_strlen, _ + 1, self.epochs, cost, train_acc * 100))
+
+            sys.stderr.flush()
+
+            self.eval['cost'].append(cost)
+            self.eval['train_acc'].append(train_acc)
+
+        return self
 
     def forward(self, X):
         # FEED FORWARD DATA
@@ -86,7 +107,7 @@ class MultiLayerPerceptron(object):
         net2 = np.dot(out1, self.weigths_output) + self.bias_output
         out2 = self.sigmoid(net2)
 
-        self.print_live_forward_activations(out1, out2)
+        #  self.print_live_forward_activations(out1, out2)
 
         return net1, out1, net2, out2
 
@@ -101,11 +122,20 @@ class MultiLayerPerceptron(object):
             one_hot[elements, idx] = 1
         return one_hot.T
 
-    def compute_cost(self):
-        pass
+    def compute_cost(self, y_enc, output):
+        L2_term = (self.L2 *
+                   (np.sum(self.weights_hidden ** 2.) +
+                    np.sum(self.weigths_output ** 2.)))
 
-    def predict(self):
-        pass
+        term1 = -y_enc * (np.log(output))
+        term2 = (1. - y_enc) * np.log(1. - output)
+        cost = np.sum(term1 - term2) + L2_term
+        return cost
+
+    def predict(self, X):
+        net1, out1, net2, out2 = self.forward(X)
+        y_pred = np.argmax(net2, axis=1)
+        return y_pred
 
     def print_model_architecture(self):
         print(
