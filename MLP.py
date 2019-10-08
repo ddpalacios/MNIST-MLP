@@ -14,6 +14,7 @@ class MultiLayerPerceptron(object):
         self.seed = seed
 
     def fit(self, X, y):
+        # Set up
         n_output = np.unique(y).shape[0]  # 10 outputs
         n_features = X.shape[1]  # 784 Features
 
@@ -24,7 +25,7 @@ class MultiLayerPerceptron(object):
         self.bias_hidden = np.zeros(self.hidden_units)  # (100, )
 
         # hidden -- > output
-        self.weigths_output = self.random.normal(loc=0.0, scale=0.1, size=(self.hidden_units, n_output))
+        self.weigths_output = self.random.normal(loc=0.0, scale=0.1, size=(self.hidden_units, n_output))  # (100, 10)
         self.bias_output = np.zeros(n_output)  # (10, )
 
         # Lets print out what our model may look like
@@ -49,6 +50,30 @@ class MultiLayerPerceptron(object):
                 batch_idx = indices[start_idx:start_idx + self.mini_batch_size]  # batch idx = [1: 60000]
 
                 net1, out1, net2, out2 = self.forward(X[batch_idx])
+
+                ################
+                # Backpropagation
+                #################
+                sigma_out = out2 - y_train_enc[batch_idx]
+                sig_derivative = out1 * (1. - out1)
+
+                sigma_h = (np.dot(sigma_out, self.weigths_output.T) * sig_derivative)
+
+                grad_w_h = np.dot(X[batch_idx].T, sigma_h)
+                grad_b_h = np.sum(sigma_h, axis=0)
+
+                grad_w_out = np.dot(out1.T, sigma_out)
+                grad_b_out = np.sum(sigma_out, axis=0)
+
+                delta_w_h = (grad_w_h + self.L2 * self.weights_hidden)
+                delta_b_h = grad_b_h
+                self.weights_hidden -= self.lr * delta_w_h
+                self.bias_hidden -= self.lr * delta_b_h
+
+                delta_w_out = (grad_w_h + self.L2 * self.weigths_output)
+                delta_b_out = grad_b_out
+                self.weigths_output -= self.lr * delta_w_out
+                self.bias_output -= self.lr * delta_b_out
 
     def forward(self, X):
         # FEED FORWARD DATA
