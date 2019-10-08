@@ -48,7 +48,7 @@ class MultiLayerPerceptron(object):
                 self.random.shuffle(indices)
 
             for start_idx in range(0, indices.shape[0], self.mini_batch_size):
-                batch_idx = indices[start_idx:start_idx + self.mini_batch_size]  # batch idx = [1: 60000]
+                batch_idx = indices[start_idx:start_idx + self.mini_batch_size]  # batch idx = [1: 100]
 
                 net1, out1, net2, out2 = self.forward(X[batch_idx])
 
@@ -69,37 +69,48 @@ class MultiLayerPerceptron(object):
 
         # ACTIVATE Input --> hidden
         net1 = np.dot(X, self.weights_hidden) + self.bias_hidden
+
         out1 = self.sigmoid(net1)
 
         # ACTIVATE hidden --> output
         net2 = np.dot(out1, self.weigths_output) + self.bias_output
         out2 = self.sigmoid(net2)
 
-        #  self.print_live_forward_activations(out1, out2)
+        # self.print_live_forward_activations(out1, out2)
 
         return net1, out1, net2, out2
 
     def backward(self, X, out1, out2, y_train_enc, batch_idx):
+
         sigma_out = out2 - y_train_enc[batch_idx]
         sig_derivative = out1 * (1. - out1)
+        sigma_h = (np.dot(sigma_out, self.weigths_output.T) * sig_derivative) # Reverse steps
 
-        sigma_h = (np.dot(sigma_out, self.weigths_output.T) * sig_derivative)
+
 
         grad_w_h = np.dot(X[batch_idx].T, sigma_h)
-        grad_b_h = np.sum(sigma_h, axis=0)
-
         grad_w_out = np.dot(out1.T, sigma_out)
+
+
+        grad_b_h = np.sum(sigma_h, axis=0)
         grad_b_out = np.sum(sigma_out, axis=0)
 
-        delta_w_h = (grad_w_h + self.L2 * self.weights_hidden)
+
+
+        delta_w_h = (grad_w_h + self.L2 * self.weights_hidden) # Regularization implementation
+        delta_w_out = (grad_w_out + self.L2 * self.weigths_output)  # Regularization implementation
+
         delta_b_h = grad_b_h
+        delta_b_out = grad_b_out
+
+
         self.weights_hidden -= self.lr * delta_w_h
         self.bias_hidden -= self.lr * delta_b_h
-
-        delta_w_out = (grad_w_out + self.L2 * self.weigths_output)
-        delta_b_out = grad_b_out
         self.weigths_output -= self.lr * delta_w_out
         self.bias_output -= self.lr * delta_b_out
+
+
+
 
     def evaluation(self, X, y, y_train_enc, epoch_strlen, epochs):
         net1, out1, net2, out2 = self.forward(X)
@@ -145,7 +156,10 @@ class MultiLayerPerceptron(object):
 
     def predict(self, X):
         net1, out1, net2, out2 = self.forward(X)
-        y_pred = np.argmax(net2, axis=1)
+
+        y_pred = np.argmax(out2, axis=1)
+
+
         return y_pred
 
     def print_model_architecture(self):
