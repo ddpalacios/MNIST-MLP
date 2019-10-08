@@ -41,7 +41,7 @@ class MultiLayerPerceptron(object):
         epoch_strlen = len(str(self.epochs))  # for progr format
         y_train_enc = self.onehot(y, n_output)  # Q.  Why is this method important? How does this affect our data?
 
-        for _ in range(self.epochs):
+        for epochs in range(self.epochs):
             indices = np.arange(X.shape[0])
 
             if self.shuffle:  # Shuffles indices
@@ -55,44 +55,12 @@ class MultiLayerPerceptron(object):
                 ################
                 # Backpropagation
                 #################
-                sigma_out = out2 - y_train_enc[batch_idx]
-                sig_derivative = out1 * (1. - out1)
-
-                sigma_h = (np.dot(sigma_out, self.weigths_output.T) * sig_derivative)
-
-                grad_w_h = np.dot(X[batch_idx].T, sigma_h)
-                grad_b_h = np.sum(sigma_h, axis=0)
-
-                grad_w_out = np.dot(out1.T, sigma_out)
-                grad_b_out = np.sum(sigma_out, axis=0)
-
-                delta_w_h = (grad_w_h + self.L2 * self.weights_hidden)
-                delta_b_h = grad_b_h
-                self.weights_hidden -= self.lr * delta_w_h
-                self.bias_hidden -= self.lr * delta_b_h
-
-                delta_w_out = (grad_w_out + self.L2 * self.weigths_output)
-                delta_b_out = grad_b_out
-                self.weigths_output -= self.lr * delta_w_out
-                self.bias_output -= self.lr * delta_b_out
+                self.backward(X, out1, out2, y_train_enc, batch_idx)
 
             ###########
             # Evaluation
             ###########
-            net1, out1, net2, out2 = self.forward(X)
-            cost = self.compute_cost(y_enc=y_train_enc, output=out2)
-
-            y_train_pred = self.predict(X)
-            train_acc = ((np.sum(y == y_train_pred)).astype(np.float) /
-                         X.shape[0])
-
-            sys.stderr.write('\r%0*d/%d| Cost: %.2f '
-                             '| Train.: %.2f%%' % (epoch_strlen, _ + 1, self.epochs, cost, train_acc * 100))
-
-            sys.stderr.flush()
-
-            self.eval['cost'].append(cost)
-            self.eval['train_acc'].append(train_acc)
+            self.evaluation(X, y, y_train_enc, epoch_strlen, epochs)
 
         return self
 
@@ -110,6 +78,44 @@ class MultiLayerPerceptron(object):
         #  self.print_live_forward_activations(out1, out2)
 
         return net1, out1, net2, out2
+
+    def backward(self, X, out1, out2, y_train_enc, batch_idx):
+        sigma_out = out2 - y_train_enc[batch_idx]
+        sig_derivative = out1 * (1. - out1)
+
+        sigma_h = (np.dot(sigma_out, self.weigths_output.T) * sig_derivative)
+
+        grad_w_h = np.dot(X[batch_idx].T, sigma_h)
+        grad_b_h = np.sum(sigma_h, axis=0)
+
+        grad_w_out = np.dot(out1.T, sigma_out)
+        grad_b_out = np.sum(sigma_out, axis=0)
+
+        delta_w_h = (grad_w_h + self.L2 * self.weights_hidden)
+        delta_b_h = grad_b_h
+        self.weights_hidden -= self.lr * delta_w_h
+        self.bias_hidden -= self.lr * delta_b_h
+
+        delta_w_out = (grad_w_out + self.L2 * self.weigths_output)
+        delta_b_out = grad_b_out
+        self.weigths_output -= self.lr * delta_w_out
+        self.bias_output -= self.lr * delta_b_out
+
+    def evaluation(self, X, y, y_train_enc, epoch_strlen, epochs):
+        net1, out1, net2, out2 = self.forward(X)
+        cost = self.compute_cost(y_enc=y_train_enc, output=out2)
+
+        y_train_pred = self.predict(X)
+        train_acc = ((np.sum(y == y_train_pred)).astype(np.float) /
+                     X.shape[0])
+
+        sys.stderr.write('\r%0*d/%d| Cost: %.2f '
+                         '| Train.: %.2f%%' % (epoch_strlen, epochs + 1, self.epochs, cost, train_acc * 100))
+
+        sys.stderr.flush()
+
+        self.eval['cost'].append(cost)
+        self.eval['train_acc'].append(train_acc)
 
     def sigmoid(self, z):
         return 1 / (1 + np.exp(-z))
