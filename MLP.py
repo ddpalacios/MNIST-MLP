@@ -118,7 +118,12 @@ class MultiLayerPerceptron(object):
         self.eval['train_acc'].append(train_acc)
 
     def sigmoid(self, z):
-        return 1 / (1 + np.exp(-z))
+        try:
+
+            return 1 / (1 + np.exp(-z))
+
+        except:
+            pass
 
     def onehot(self, labels, n_classes):
         one_hot = np.zeros((n_classes, labels.shape[0]))  # (10, 6000)
